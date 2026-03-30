@@ -1,0 +1,3 @@
+1. Real-time mechanical keyboard sound simulator for your keyboard
+2. Simulate mechanical keyboard sounds on any keyboard with zero latency
+3. Turn any keyboard into a mechanical keyboard — real-time sound simulator in Rust
