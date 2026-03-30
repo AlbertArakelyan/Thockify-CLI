@@ -1,0 +1,8 @@
+[package]
+name = "mech-keyboaurd-sound-rust"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+rdev = "0.5"
+rodio = "0.17"
