@@ -4,9 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-Cross-platform Rust utility that plays a click sound on every key press/release using global keyboard hooks. Single-file project (`src/main.rs`).
+Mechanical keyboard sound simulator in Rust. Plays per-key sounds on every key press/release via global keyboard hooks with zero-latency concurrent audio. Currently a single-file project (`src/main.rs`) evolving toward a full sound pack system (see `SPEC.md`).
 
-**Note:** Package name has a typo: `mech-keyboaurd-sound-rust` (extra 'u' in keyboard).
+**Note:** Package name has a typo in Cargo.toml: `mech-keyboaurd-sound-rust` (extra 'u' in keyboard).
 
 ## Build & Run
 
@@ -14,24 +14,30 @@ Cross-platform Rust utility that plays a click sound on every key press/release 
 cargo build              # debug build
 cargo build --release    # release build
 cargo run                # run (requires click.wav in cwd)
+cargo fmt                # format
+cargo clippy             # lint
 ```
 
-No tests exist currently. The project has no linter or formatter configured beyond standard `cargo fmt` / `cargo clippy`.
+No tests exist. The app requires OS-level permission for global keyboard hooks and an audio output device. Exit with Ctrl+C.
 
 ## Architecture
 
-The entire application is in `src/main.rs` (~54 lines):
+Everything is in `src/main.rs` (~45 lines):
 
-1. **Startup:** Loads `click.wav` into memory as `Arc<Vec<u8>>` for thread-safe sharing
-2. **Event loop:** `rdev::listen()` blocks the main thread, capturing global keyboard events
-3. **Audio playback:** Each KeyPress/KeyRelease spawns a new thread that decodes the WAV bytes via `rodio` and plays through the default audio output
+1. **Startup** — Loads `click.wav` into `Arc<Vec<u8>>`, opens one `OutputStream`
+2. **Event loop** — `rdev::listen()` blocks main thread, captures global `KeyPress`/`KeyRelease`
+3. **Key dedup** — `HashSet<Key>` behind `Mutex` filters out OS key-repeat duplicates
+4. **Audio** — `stream_handle.play_raw(source.convert_samples())` plays each sound instantly and concurrently
 
-Key dependencies:
-- **rdev 0.5** — global keyboard event listener (uses winapi on Windows)
-- **rodio 0.17** — audio decoding and playback (uses cpal for cross-platform audio)
+### Critical: Never use `rodio::Sink` for playback
 
-## Runtime Requirements
+`Sink::append()` queues sounds sequentially — each waits for the previous to finish, causing growing latency during fast typing. Always use `play_raw()` for immediate concurrent playback. Full rationale in `.claude/skills/lag-free-keyboard-audio.md`.
 
-- `click.wav` must be in the working directory
-- Requires OS-level permission for global keyboard hooks
-- Exit with Ctrl+C
+## Dependencies
+
+- **rdev 0.5** — global keyboard event listener (winapi on Windows)
+- **rodio 0.17** — audio decoding/playback (cpal backend)
+
+## Planned Direction
+
+Evolving from single `click.wav` to a `sound-packs/` system with per-key WAV files (`<key>-down.wav`, `<key>-up.wav`) and `fallback-down.wav`/`fallback-up.wav` for unspecified keys. Full design in `SPEC.md`.
