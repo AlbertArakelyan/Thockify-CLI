@@ -1,3 +1,9 @@
+---
+name: lag-free-keyboard-audio
+description: Guide for implementing zero-latency concurrent audio playback with rodio. Use when working on sound playback, fixing audio lag, or adding new key-sound features.
+user-invocable: false
+---
+
 # Lag-Free Mechanical Keyboard Sound Playback in Rust
 
 ## Problem
