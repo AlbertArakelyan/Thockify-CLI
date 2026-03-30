@@ -4,7 +4,7 @@
 // rodio = "0.17"
 
 use rdev::{listen, Event, EventType, Key};
-use rodio::{Decoder, OutputStream, Sink};
+use rodio::{Decoder, OutputStream, Source};
 use std::collections::HashSet;
 use std::sync::{Arc, Mutex};
 
@@ -24,7 +24,6 @@ fn main() {
     // Create audio output ONCE — opening a device per-event is expensive (~50-200ms)
     let (_stream, stream_handle) =
         OutputStream::try_default().expect("Failed to open audio output");
-    let sink = Arc::new(Sink::try_new(&stream_handle).expect("Failed to create audio sink"));
 
     // Listen to global keyboard events
     if let Err(error) = listen(move |event: Event| {
@@ -36,7 +35,8 @@ fn main() {
         if should_play {
             let cursor = std::io::Cursor::new(sound_data.as_ref().clone());
             if let Ok(source) = Decoder::new(cursor) {
-                sink.append(source);
+                // play_raw plays immediately and concurrently — no queuing
+                let _ = stream_handle.play_raw(source.convert_samples());
             }
         }
     }) {
