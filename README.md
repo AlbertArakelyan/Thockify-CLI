@@ -1,3 +1,6 @@
+> [!NOTE]
+> This project was moved to a better supported GUI version, check it out - [Thokify](https://github.com/AlbertArakelyan/Thockify)
+
 <p align="center">
   <img src="logo.svg" alt="Thockify" width="120" />
 </p>
